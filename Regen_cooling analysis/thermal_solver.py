@@ -10,6 +10,9 @@ class ThermalSolver:
 
         self.material = material
 
+    # ----------------------------------
+    # Total Thermal Resistance
+    # ----------------------------------
 
     def total_resistance(
         self,
@@ -23,19 +26,21 @@ class ThermalSolver:
 
         return (
 
-            1/hg
+            1.0 / hg
 
             +
 
-            t/k
+            t / k
 
             +
 
-            1/hc
+            1.0 / hc
 
         )
 
-
+    # ----------------------------------
+    # Heat Flux
+    # ----------------------------------
 
     def heat_flux(
         self,
@@ -45,20 +50,24 @@ class ThermalSolver:
         hc
     ):
 
-        R = self.total_resistance(
+        Rtot = self.total_resistance(
             hg,
             hc
         )
 
-        return (
+        q = (
 
             Taw
             -
             Tcool
 
-        ) / R
+        ) / Rtot
 
+        return q
 
+    # ----------------------------------
+    # Inner Wall Temperature
+    # ----------------------------------
 
     def inner_wall_temp(
         self,
@@ -67,9 +76,17 @@ class ThermalSolver:
         hg
     ):
 
-        return Taw - q/hg
+        return (
 
+            Taw
+            -
+            q / hg
 
+        )
+
+    # ----------------------------------
+    # Outer Wall Temperature
+    # ----------------------------------
 
     def outer_wall_temp(
         self,
@@ -78,9 +95,83 @@ class ThermalSolver:
         hc
     ):
 
-        return Tcool + q/hc
+        return (
 
+            Tcool
+            +
+            q / hc
 
+        )
+
+    # ----------------------------------
+    # Thermal Safety Check
+    # ----------------------------------
+
+    def thermal_check(
+        self,
+        Twi,
+        Two
+    ):
+
+        status = []
+
+        if Two > self.material.max_outer_wall_temp:
+
+            status.append(
+                "OUTER WALL LIMIT EXCEEDED"
+            )
+
+        if Twi > self.material.max_inner_wall_temp:
+
+            status.append(
+                "INNER WALL LIMIT EXCEEDED"
+            )
+
+        if len(status) == 0:
+
+            status.append(
+                "PASS"
+            )
+
+        return status
+
+    # ----------------------------------
+    # Margin Calculation
+    # ----------------------------------
+
+    def thermal_margin(
+        self,
+        Twi,
+        Two
+    ):
+
+        outer_margin = (
+
+            self.material.max_outer_wall_temp
+            -
+            Two
+
+        )
+
+        inner_margin = (
+
+            self.material.max_inner_wall_temp
+            -
+            Twi
+
+        )
+
+        return {
+
+            "OuterMargin": outer_margin,
+
+            "InnerMargin": inner_margin
+
+        }
+
+    # ----------------------------------
+    # Solve One Station
+    # ----------------------------------
 
     def solve_station(
         self,
@@ -91,22 +182,42 @@ class ThermalSolver:
     ):
 
         q = self.heat_flux(
+
             Taw,
             Tcool,
             hg,
             hc
+
         )
 
         Twi = self.inner_wall_temp(
+
             Taw,
             q,
             hg
+
         )
 
         Two = self.outer_wall_temp(
+
             Tcool,
             q,
             hc
+
+        )
+
+        margin = self.thermal_margin(
+
+            Twi,
+            Two
+
+        )
+
+        status = self.thermal_check(
+
+            Twi,
+            Two
+
         )
 
         return {
@@ -115,6 +226,21 @@ class ThermalSolver:
 
             "InnerWallTemp": Twi,
 
-            "OuterWallTemp": Two
+            "OuterWallTemp": Two,
+
+            "TotalResistance":
+            self.total_resistance(
+                hg,
+                hc
+            ),
+
+            "InnerMargin":
+            margin["InnerMargin"],
+
+            "OuterMargin":
+            margin["OuterMargin"],
+
+            "Status":
+            status
 
         }
