@@ -7,7 +7,6 @@ class ThermalSolver:
     ):
 
         self.geometry = geometry
-
         self.material = material
 
     # ----------------------------------
@@ -44,7 +43,7 @@ class ThermalSolver:
 
     def heat_flux(
         self,
-        Taw,
+        Thot,
         Tcool,
         hg,
         hc
@@ -57,7 +56,7 @@ class ThermalSolver:
 
         q = (
 
-            Taw
+            Thot
             -
             Tcool
 
@@ -66,26 +65,26 @@ class ThermalSolver:
         return q
 
     # ----------------------------------
-    # Inner Wall Temperature
+    # Hot Side Wall Temperature
     # ----------------------------------
 
     def inner_wall_temp(
         self,
-        Taw,
+        Thot,
         q,
         hg
     ):
 
         return (
 
-            Taw
+            Thot
             -
             q / hg
 
         )
 
     # ----------------------------------
-    # Outer Wall Temperature
+    # Coolant Side Wall Temperature
     # ----------------------------------
 
     def outer_wall_temp(
@@ -110,12 +109,12 @@ class ThermalSolver:
     def thermal_check(
         self,
         Twi,
-        Two
+        Twc
     ):
 
         status = []
 
-        if Two > self.material.max_outer_wall_temp:
+        if Twc > self.material.max_outer_wall_temp:
 
             status.append(
                 "OUTER WALL LIMIT EXCEEDED"
@@ -136,20 +135,20 @@ class ThermalSolver:
         return status
 
     # ----------------------------------
-    # Margin Calculation
+    # Thermal Margin
     # ----------------------------------
 
     def thermal_margin(
         self,
         Twi,
-        Two
+        Twc
     ):
 
         outer_margin = (
 
             self.material.max_outer_wall_temp
             -
-            Two
+            Twc
 
         )
 
@@ -175,7 +174,7 @@ class ThermalSolver:
 
     def solve_station(
         self,
-        Taw,
+        Thot,
         Tcool,
         hg,
         hc
@@ -183,7 +182,7 @@ class ThermalSolver:
 
         q = self.heat_flux(
 
-            Taw,
+            Thot,
             Tcool,
             hg,
             hc
@@ -192,13 +191,13 @@ class ThermalSolver:
 
         Twi = self.inner_wall_temp(
 
-            Taw,
+            Thot,
             q,
             hg
 
         )
 
-        Two = self.outer_wall_temp(
+        Twc = self.outer_wall_temp(
 
             Tcool,
             q,
@@ -209,14 +208,14 @@ class ThermalSolver:
         margin = self.thermal_margin(
 
             Twi,
-            Two
+            Twc
 
         )
 
         status = self.thermal_check(
 
             Twi,
-            Two
+            Twc
 
         )
 
@@ -226,7 +225,7 @@ class ThermalSolver:
 
             "InnerWallTemp": Twi,
 
-            "OuterWallTemp": Two,
+            "CoolantSideWallTemp": Twc,
 
             "TotalResistance":
             self.total_resistance(
@@ -243,4 +242,4 @@ class ThermalSolver:
             "Status":
             status
 
-        }
+        }    
