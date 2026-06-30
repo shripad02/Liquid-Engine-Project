@@ -27,6 +27,9 @@ class RegencoolingGeo:
     
     def heat_transfer_area(self, lenght):
         return ( self.wetted_perimeter*self.n_channels*lenght)
+
+    def aspect_ratio(self):
+        return (self.height/self.width)
     
     def summary(self, length):
 
