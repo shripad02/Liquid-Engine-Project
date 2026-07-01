@@ -34,7 +34,7 @@ class MarchingSolver:
         for i in range(len(df)-1, 0, -1):
             
             row = df.iloc[i]
-            next_row = df.iloc[i+1]
+            next_row = df.iloc[i-1]
             
             x = row["x(mm)"]/1000 # in m
             x_next = next_row["x(mm)"]/1000 # in m
