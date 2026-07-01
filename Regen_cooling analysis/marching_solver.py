@@ -31,7 +31,7 @@ class MarchingSolver:
         
         results = []
         
-        for i in range(len(df)-1):
+        for i in range(len(df)-1, 0, -1):
             
             row = df.iloc[i]
             next_row = df.iloc[i+1]
